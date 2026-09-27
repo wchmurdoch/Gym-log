@@ -54,7 +54,7 @@ button.secondary{border:1px solid #ccc;background:white;border-radius:10px;paddi
 </div>
 <div class="status" id="status"></div>
 </section>
-<section id="history" class="panel history"><h2>Workout History</h2><div id="historyList"></div></section>
+<section id="history" class="panel history"><h2>Workout History</h2><div class="small" style="margin-bottom:12px">Previous sessions imported from your resistance training record.</div><div id="historyList"></div></section>
 <section id="library" class="panel library">
 <h2>Exercise Library</h2>
 <input class="search" id="search" placeholder="Search exercises..." oninput="renderLibrary()">
@@ -68,10 +68,20 @@ const starter=[
 ["Shoulder Press",9,4,12],["Chest Press",13.3,4,12],["Chest Fly",45,4,12],
 ["Pectoral Fly",18,4,12],["Lateral Raise",27,4,12],["Triceps",27,4,12],
 ["Biceps Curl",18,4,12],["Lat Pulldown",18,4,12],["Chin Assist",73,4,12],
-["Diverging Seated Row",18,4,12],["Abdominal Crunch",27,4,12],["Dip",33,4,12]
+["Diverging Seated Row",18,4,12],["Abdominal Crunch",27,4,12],["Dip",33,4,12],
+["Converging Chest Press",13.3,4,12],["Arm Curl",18,4,12],["Tricep Extension",27,4,12],
+["Seated Dip",33,4,12],["Diverging Lat Pulldown",18,4,12],
+["Converging Shoulder Press",9,4,12],["Calf Press",59,4,12],
+["Glute Drive",0,4,12],["Back Extension",0,4,12],["Reverse Fly",0,4,12]
 ];
 
+const historicalSeed=[{"date":"2026-08-31","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Leg Extension","weight":25,"sets":4,"reps":12},{"name":"Prone Leg Curl","weight":32,"sets":4,"reps":12},{"name":"Hip Abduction","weight":52,"sets":4,"reps":12},{"name":"Hip Adduction","weight":52,"sets":4,"reps":12},{"name":"Calf Press","weight":54.3,"sets":4,"reps":12},{"name":"Converging Chest Press","weight":11,"sets":4,"reps":12},{"name":"Pectoral Fly","weight":18,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12},{"name":"Tricep Extension","weight":27,"sets":4,"reps":12},{"name":"Diverging Seated Row","weight":18,"sets":4,"reps":12},{"name":"Diverging Lat Pulldown","weight":18,"sets":4,"reps":12},{"name":"Chin Assist","weight":68,"sets":3,"reps":12},{"name":"Converging Shoulder Press","weight":9,"sets":4,"reps":12},{"name":"Lateral Raise","weight":27,"sets":4,"reps":12},{"name":"Abdominal Crunch","weight":23,"sets":4,"reps":12}]},{"date":"2026-09-02","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Leg Extension","weight":27.3,"sets":4,"reps":12},{"name":"Prone Leg Curl","weight":32,"sets":4,"reps":12},{"name":"Hip Abduction","weight":52,"sets":4,"reps":12},{"name":"Hip Adduction","weight":52,"sets":4,"reps":12},{"name":"Calf Press","weight":59,"sets":4,"reps":12},{"name":"Converging Chest Press","weight":13.3,"sets":4,"reps":12},{"name":"Pectoral Fly","weight":18,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12},{"name":"Tricep Extension","weight":27,"sets":4,"reps":12},{"name":"Diverging Seated Row","weight":18,"sets":4,"reps":12},{"name":"Diverging Lat Pulldown","weight":18,"sets":4,"reps":12},{"name":"Chin Assist","weight":68,"sets":3,"reps":12},{"name":"Converging Shoulder Press","weight":9,"sets":4,"reps":12},{"name":"Abdominal Crunch","weight":23,"sets":4,"reps":12}]},{"date":"2026-09-04","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Leg Extension","weight":26.1,"sets":4,"reps":12},{"name":"Prone Leg Curl","weight":32,"sets":4,"reps":12},{"name":"Hip Abduction","weight":52,"sets":4,"reps":12},{"name":"Hip Adduction","weight":52,"sets":4,"reps":12},{"name":"Calf Press","weight":52,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12},{"name":"Tricep Extension","weight":27,"sets":4,"reps":12},{"name":"Diverging Seated Row","weight":18,"sets":4,"reps":12},{"name":"Diverging Lat Pulldown","weight":18,"sets":4,"reps":12},{"name":"Chin Assist","weight":75.2,"sets":4,"reps":12},{"name":"Converging Shoulder Press","weight":9,"sets":4,"reps":12},{"name":"Abdominal Crunch","weight":27,"sets":4,"reps":12}]},{"date":"2026-09-07","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Leg Extension","weight":27.3,"sets":4,"reps":12},{"name":"Hip Abduction","weight":52,"sets":4,"reps":12},{"name":"Hip Adduction","weight":52,"sets":4,"reps":12},{"name":"Calf Press","weight":52,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12},{"name":"Tricep Extension","weight":27,"sets":4,"reps":12},{"name":"Converging Shoulder Press","weight":9,"sets":4,"reps":12}]},{"date":"2026-09-09","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Leg Extension","weight":26.1,"sets":4,"reps":12},{"name":"Hip Abduction","weight":52,"sets":4,"reps":12},{"name":"Hip Adduction","weight":52,"sets":4,"reps":12},{"name":"Calf Press","weight":59,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12},{"name":"Tricep Extension","weight":29.3,"sets":4,"reps":12},{"name":"Converging Shoulder Press","weight":9,"sets":4,"reps":12},{"name":"Abdominal Crunch","weight":27,"sets":4,"reps":12}]},{"date":"2026-09-11","items":[{"name":"Leg Press","weight":59,"sets":4,"reps":12},{"name":"Arm Curl","weight":18,"sets":4,"reps":12}]},{"date":"2026-09-14","items":[]},{"date":"2026-09-16","items":[]},{"date":"2026-09-18","items":[]},{"date":"2026-09-21","items":[]},{"date":"2026-09-23","items":[]},{"date":"2026-09-25","items":[]}];
 let data=JSON.parse(localStorage.getItem("gymLog")||"null")||{workouts:[],exercises:{}};
+if(!localStorage.getItem("gymLogHistorySeedV2")){
+  historicalSeed.forEach(w=>data.workouts.push(w));
+  data.workouts.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  localStorage.setItem("gymLogHistorySeedV2","1");
+}
 starter.forEach(x=>{if(!data.exercises[x[0]])data.exercises[x[0]]={weight:x[1],sets:x[2],reps:x[3]}});
 let current=[];
 

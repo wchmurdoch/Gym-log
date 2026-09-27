@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171717">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym Log">
+<link rel="manifest" href="manifest.json">
+<title>Gym Log</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f7;color:#171717}
+header{padding:calc(18px + env(safe-area-inset-top)) 18px 12px;background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid #ddd}
+h1{margin:0;font-size:28px}.date{color:#666;margin-top:4px}
+nav{display:flex;background:white;border-bottom:1px solid #ddd;position:sticky;top:76px;z-index:4}
+nav button{flex:1;border:0;background:white;padding:14px 5px;font-weight:700;color:#777;font-size:14px}
+nav button.active{color:#111;border-bottom:3px solid #111}
+main{max-width:700px;margin:auto;padding:14px 14px calc(90px + env(safe-area-inset-bottom))}
+.panel{display:none}.panel.active{display:block}
+.card{background:white;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 1px 4px #00000010}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.name{font-weight:750;font-size:17px}.last{font-size:13px;color:#666;margin:5px 0 12px}
+input,select{width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px;background:white}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+label{font-size:11px;color:#666;display:block;margin-bottom:4px}
+button.primary{width:100%;border:0;border-radius:12px;padding:14px;background:#171717;color:white;font-size:16px;font-weight:750;margin-top:8px}
+button.secondary{border:1px solid #ccc;background:white;border-radius:10px;padding:8px 10px;font-weight:650}
+.add{display:flex;gap:8px;margin-bottom:12px}.add select{flex:1}.add button{width:80px}
+.history h2,.library h2{font-size:20px}.empty{color:#777;text-align:center;padding:30px}
+.small{font-size:13px;color:#666}.workout-title{font-weight:750;margin-bottom:6px}
+.remove{color:#b00020;border:0;background:none;font-weight:700}
+.search{margin-bottom:12px}
+.actions{display:flex;gap:8px;margin:8px 0 14px}.actions button{flex:1}
+.status{font-size:12px;color:#666;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>Gym Log</h1><div class="date" id="date"></div></header>
+<nav>
+<button class="active" onclick="showTab('workout',this)">New Workout</button>
+<button onclick="showTab('history',this)">History</button>
+<button onclick="showTab('library',this)">Exercises</button>
+</nav>
+<main>
+<section id="workout" class="panel active">
+<div class="add"><select id="exerciseSelect"></select><button class="secondary" onclick="addExercise()">+ Add</button></div>
+<div id="workoutList"></div>
+<button class="primary" onclick="saveWorkout()">Save Workout</button>
+<div class="actions">
+<button class="secondary" onclick="clearWorkout()">Clear</button>
+<button class="secondary" onclick="exportCSV()">Export CSV</button>
+</div>
+<div class="status" id="status"></div>
+</section>
+<section id="history" class="panel history"><h2>Workout History</h2><div id="historyList"></div></section>
+<section id="library" class="panel library">
+<h2>Exercise Library</h2>
+<input class="search" id="search" placeholder="Search exercises..." oninput="renderLibrary()">
+<div id="libraryList"></div>
+</section>
+</main>
+<script>
+const starter=[
+["Leg Press",59,4,12],["Horizontal Leg Press",52,4,12],["Leg Extension",27.3,4,12],
+["Prone Leg Curl",32,4,12],["Hip Adduction",52,4,12],["Hip Abduction",52,4,12],
+["Shoulder Press",9,4,12],["Chest Press",13.3,4,12],["Chest Fly",45,4,12],
+["Pectoral Fly",18,4,12],["Lateral Raise",27,4,12],["Triceps",27,4,12],
+["Biceps Curl",18,4,12],["Lat Pulldown",18,4,12],["Chin Assist",73,4,12],
+["Diverging Seated Row",18,4,12],["Abdominal Crunch",27,4,12],["Dip",33,4,12]
+];
+
+let data=JSON.parse(localStorage.getItem("gymLog")||"null")||{workouts:[],exercises:{}};
+starter.forEach(x=>{if(!data.exercises[x[0]])data.exercises[x[0]]={weight:x[1],sets:x[2],reps:x[3]}});
+let current=[];
+
+function today(){return new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+date.textContent=today();
+function save(){localStorage.setItem("gymLog",JSON.stringify(data))}
+function showTab(id,btn){
+ document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+ btn.classList.add("active");
+ if(id==="history")renderHistory(); if(id==="library")renderLibrary();
+}
+function populate(){
+ exerciseSelect.innerHTML=Object.keys(data.exercises).sort().map(e=>`<option>${e}</option>`).join("");
+}
+function addExercise(){
+ let n=exerciseSelect.value;if(!n||current.some(x=>x.name===n))return;
+ let l=data.exercises[n]||{};
+ current.push({name:n,weight:l.weight??"",sets:l.sets??4,reps:l.reps??12});
+ renderWorkout();
+}
+function renderWorkout(){
+ workoutList.innerHTML=current.map((x,i)=>`<div class="card">
+ <div class="row"><div class="name">${x.name}</div><button class="remove" onclick="removeExercise(${i})">Remove</button></div>
+ <div class="last">Last: ${data.exercises[x.name]?.weight??"—"} kg · ${data.exercises[x.name]?.sets??"—"} × ${data.exercises[x.name]?.reps??"—"}</div>
+ <div class="grid">
+ <div><label>Weight (kg)</label><input inputmode="decimal" type="number" step="0.1" value="${x.weight}" onchange="current[${i}].weight=this.value"></div>
+ <div><label>Sets</label><input inputmode="numeric" type="number" value="${x.sets}" onchange="current[${i}].sets=this.value"></div>
+ <div><label>Reps</label><input inputmode="numeric" type="number" value="${x.reps}" onchange="current[${i}].reps=this.value"></div>
+ </div></div>`).join("");
+}
+function removeExercise(i){current.splice(i,1);renderWorkout()}
+function clearWorkout(){current=[];renderWorkout()}
+function saveWorkout(){
+ if(!current.length){alert("Add at least one exercise.");return}
+ let items=current.map(x=>({name:x.name,weight:Number(x.weight),sets:Number(x.sets),reps:Number(x.reps)}));
+ data.workouts.unshift({date:new Date().toISOString(),items});
+ items.forEach(x=>data.exercises[x.name]={weight:x.weight,sets:x.sets,reps:x.reps});
+ save();current=[];renderWorkout();status.textContent="Workout saved";showTab("history",document.querySelectorAll("nav button")[1]);
+ setTimeout(()=>status.textContent="",2000);
+}
+function renderHistory(){
+ if(!data.workouts.length){historyList.innerHTML='<div class="empty">No workouts saved yet.</div>';return}
+ historyList.innerHTML=data.workouts.map(w=>`<div class="card"><div class="workout-title">${new Date(w.date).toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>${w.items.map(x=>`<div>${x.name} — <b>${x.weight} kg · ${x.sets} × ${x.reps}</b></div>`).join("")}</div>`).join("")
+}
+function renderLibrary(){
+ let q=(search.value||"").toLowerCase();
+ let names=Object.keys(data.exercises).sort().filter(n=>n.toLowerCase().includes(q));
+ libraryList.innerHTML=names.map(n=>{let x=data.exercises[n];return `<div class="card"><div class="name">${n}</div><div class="small">Last: <b>${x.weight} kg · ${x.sets} × ${x.reps}</b></div></div>`}).join("")||'<div class="empty">No exercises found.</div>'
+}
+function exportCSV(){
+ let rows=[["Date","Exercise","Weight (kg)","Sets","Reps"]];
+ data.workouts.forEach(w=>w.items.forEach(x=>rows.push([new Date(w.date).toLocaleDateString("en-GB"),x.name,x.weight,x.sets,x.reps])));
+ let csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+ let blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+ let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gym-log.csv";a.click();URL.revokeObjectURL(a.href);
+}
+populate();renderWorkout();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+</script>
+</body>
+</html>
